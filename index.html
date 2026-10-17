@@ -6,8 +6,7 @@
 <title>RIFTSYNC — beat-driven flow game</title>
 <meta name="description" content="A calm, beat-driven flow game. Hold the rift open while signals from different universes arrive on the beat. 60-second rounds, no game over.">
 <style>
-/* ── Google Fonts (CSS import, not external script) ── */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -16,7 +15,7 @@
   --accent:#7c6fff;--lime:#d8fd71;
   --muted:rgba(232,234,246,0.38);
   --card:rgba(255,255,255,0.04);
-  --font:'Outfit',system-ui,sans-serif;
+  --font:'Space Grotesk',system-ui,sans-serif;
   --mono:'JetBrains Mono',monospace;
 }
 
@@ -50,25 +49,33 @@ html,body{
   display:flex;justify-content:space-between;align-items:flex-start;
   padding:14px 18px;gap:10px;
 }
+/* double-bezel: outer shell → inner core so blocks feel machined, not flat */
 .hud-block{
-  background:rgba(7,8,16,.75);
-  border:1px solid rgba(124,111,255,.22);
-  border-radius:14px;padding:7px 14px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:16px;padding:3px;
   backdrop-filter:blur(12px);
 }
-.hud-lbl{font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-family:var(--mono)}
+.hud-inner{
+  background:rgba(4,5,10,.92);
+  border-radius:12px;padding:5px 12px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+}
+.hud-lbl{font-size:8px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-family:var(--mono)}
 .hud-val{font-size:20px;font-weight:700;font-family:var(--mono);line-height:1.1}
 .hud-val.score{color:var(--lime)}
 .hud-val.combo{color:var(--accent)}
 
 #world-pill{
   position:absolute;top:14px;left:50%;transform:translateX(-50%);
-  font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--muted);font-family:var(--mono);
-  background:rgba(7,8,16,.65);padding:5px 14px;border-radius:20px;
+  font-size:9px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(232,234,246,.6);font-family:var(--mono);
+  background:rgba(4,5,10,.8);padding:5px 12px 5px 10px;
+  border-radius:20px;border-left:2px solid var(--world-accent,#7c6fff);
   backdrop-filter:blur(8px);pointer-events:none;
-  white-space:nowrap;
+  white-space:nowrap;display:flex;align-items:center;gap:6px;
 }
+#world-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--world-accent,#7c6fff);flex-shrink:0}
 
 /* judgment */
 #judgment{
@@ -82,15 +89,20 @@ html,body{
 #judgment.good{color:var(--accent)}
 #judgment.miss{color:#ff6b6b}
 
-/* flow */
+/* flow — segmented 8-block meter, matches geometric orb aesthetic */
 #flow-wrap{
   position:absolute;bottom:0;left:50%;transform:translateX(-50%);
   padding:0 0 14px;
-  display:flex;flex-direction:column;align-items:center;gap:4px;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
 }
-#flow-lbl{font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-family:var(--mono)}
-#flow-outer{width:130px;height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
-#flow-inner{height:100%;background:linear-gradient(90deg,var(--accent),var(--lime));border-radius:3px;width:0%;transition:width .12s ease}
+#flow-lbl{font-size:8px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-family:var(--mono)}
+#flow-segs{display:flex;gap:3px}
+.fseg{
+  width:13px;height:5px;border-radius:2px;
+  background:rgba(255,255,255,.08);
+  transition:background .15s ease;
+}
+.fseg.on{background:var(--lime)}
 
 /* timer */
 #timer-svg{position:absolute;bottom:12px;right:14px;width:54px;height:54px}
@@ -137,19 +149,19 @@ html,body{
 #profile-card .pname{font-size:12px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #profile-card .paccount{font-size:9px;color:var(--muted);font-family:var(--mono)}
 
-/* shipit banner */
+/* shipit banner — bottom-centre avoids dead-centre AI default */
 #shipit-banner{
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  z-index:200;font-size:34px;font-weight:900;letter-spacing:.05em;
-  color:var(--lime);text-shadow:0 0 40px rgba(216,253,113,.8);
+  position:fixed;bottom:22%;left:50%;transform:translateX(-50%);
+  z-index:200;font-size:30px;font-weight:700;letter-spacing:.12em;
+  color:var(--lime);text-shadow:0 0 28px rgba(216,253,113,.6);
   opacity:0;pointer-events:none;text-align:center;
-  transition:opacity .25s;
+  transition:opacity .25s;white-space:nowrap;
 }
 #shipit-tooltip{
   position:fixed;bottom:76px;left:50%;transform:translateX(-50%);
-  z-index:201;background:rgba(7,8,16,.92);
-  border:1px solid rgba(216,253,113,.4);border-radius:12px;
-  padding:9px 16px;font-size:11px;font-family:var(--mono);
+  z-index:201;background:rgba(4,5,10,.94);
+  border:1px solid rgba(216,253,113,.35);border-radius:10px;
+  padding:8px 14px;font-size:10px;font-family:var(--mono);
   color:var(--lime);text-align:center;opacity:0;pointer-events:none;
   transition:opacity .3s;white-space:nowrap;
 }
@@ -157,54 +169,107 @@ html,body{
 /* rift flash */
 #rift-flash{position:fixed;inset:0;z-index:40;pointer-events:none;opacity:0;background:#fff}
 
-/* ── TITLE SCREEN ── */
+/* ── TITLE SCREEN — editorial left/right split ── */
 #title-screen{
+  background:var(--bg);
+  align-items:flex-start;justify-content:flex-start;
+  padding:0;
+}
+.title-layout{
+  display:grid;grid-template-columns:1fr 1fr;
+  width:100%;height:100%;
+  position:relative;
+}
+/* faint ambient gradients as background texture, not centred blobs */
+.title-layout::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
   background:
-    radial-gradient(ellipse at 28% 38%,rgba(124,111,255,.13) 0%,transparent 58%),
-    radial-gradient(ellipse at 72% 72%,rgba(216,253,113,.07) 0%,transparent 58%),
-    var(--bg);
+    radial-gradient(ellipse at 15% 60%,rgba(124,111,255,.09) 0%,transparent 50%),
+    radial-gradient(ellipse at 80% 30%,rgba(216,253,113,.05) 0%,transparent 45%);
 }
-.logo{
-  font-size:clamp(40px,10vw,78px);font-weight:900;letter-spacing:-.02em;
-  background:linear-gradient(135deg,#fff 0%,var(--lime) 42%,var(--accent) 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  line-height:1;margin-bottom:5px;
+.title-left{
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:clamp(24px,5vw,56px);gap:20px;position:relative;
 }
-.logo-sub{
-  font-size:10px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;
-  color:var(--muted);font-family:var(--mono);margin-bottom:28px;
+.title-right{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;
+  /* subtle vertical separator */
+  border-left:1px solid rgba(255,255,255,.05);
 }
-#title-canvas{width:96px;height:124px;margin:0 auto 6px;display:block}
-#title-pname{font-size:13px;color:var(--muted);margin-bottom:26px;font-family:var(--mono)}
 
-.btn-group{display:flex;flex-direction:column;gap:9px;width:100%;max-width:276px}
+/* logo: RIFT white + SYNC lime — two-tone solid, no gradient */
+.logo{
+  font-size:clamp(42px,7vw,86px);font-weight:700;letter-spacing:-.03em;
+  line-height:.95;color:#fff;
+  display:inline-block;
+}
+.logo .sync{color:var(--lime)}
+
+.logo-eyebrow{
+  font-size:9px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--muted);font-family:var(--mono);margin-bottom:4px;
+}
+#title-pname{
+  font-size:12px;color:rgba(232,234,246,.45);font-family:var(--mono);
+  margin-top:-8px;
+}
+
+.btn-group{display:flex;flex-direction:column;gap:8px;width:100%;max-width:260px}
 .btn{
   display:flex;align-items:center;justify-content:center;gap:8px;
-  padding:12px 22px;border-radius:999px;font-family:var(--font);
-  font-size:14px;font-weight:600;cursor:pointer;border:none;
-  transition:transform .15s cubic-bezier(.32,.72,0,1),box-shadow .2s,background .2s;
-  letter-spacing:.02em;position:relative;overflow:hidden;
+  font-family:var(--font);font-size:14px;font-weight:600;
+  cursor:pointer;border:none;
+  transition:transform .15s cubic-bezier(.32,.72,0,1),box-shadow .2s,opacity .2s;
+  letter-spacing:.01em;
 }
 .btn:active{transform:scale(.97)!important}
-.btn-primary{background:linear-gradient(135deg,var(--accent) 0%,#a78bfa 100%);color:#fff;box-shadow:0 4px 22px rgba(124,111,255,.34)}
-.btn-primary:hover{box-shadow:0 6px 30px rgba(124,111,255,.5);transform:translateY(-1px)}
-.btn-secondary{background:rgba(255,255,255,.06);color:var(--fg);border:1px solid rgba(255,255,255,.1)}
-.btn-secondary:hover{background:rgba(255,255,255,.1);transform:translateY(-1px)}
-.btn-ghost{background:transparent;color:var(--muted);font-size:12px}
+/* primary: lime bg, dark text — high contrast, unmistakable */
+.btn-primary{
+  background:var(--lime);color:#070810;
+  padding:13px 22px;border-radius:12px;
+  box-shadow:0 0 0 0 rgba(216,253,113,0);
+}
+.btn-primary:hover{box-shadow:0 0 28px rgba(216,253,113,.3);transform:translateY(-1px)}
+/* secondary: ghost pill, softer presence */
+.btn-secondary{
+  background:rgba(255,255,255,.05);color:var(--fg);
+  border:1px solid rgba(255,255,255,.1);
+  padding:11px 20px;border-radius:12px;
+}
+.btn-secondary:hover{background:rgba(255,255,255,.09);transform:translateY(-1px)}
+/* ghost: inline text link — settings does not need a pill */
+.btn-ghost{
+  background:transparent;color:var(--muted);font-size:12px;
+  padding:8px 0;text-decoration:none;
+  display:inline-flex;align-items:center;gap:4px;
+}
 .btn-ghost:hover{color:var(--fg)}
-.btn-lime{background:var(--lime);color:#070810;font-weight:700}
-.btn-lime:hover{background:#c8f050;transform:translateY(-1px)}
+.btn-lime{background:var(--lime);color:#070810;font-weight:700;border-radius:999px;padding:8px 16px}
+.btn-lime:hover{opacity:.88;transform:translateY(-1px)}
 
-.title-bottom{display:flex;gap:10px;margin-top:14px;align-items:center;justify-content:center}
+.title-bottom{display:flex;gap:10px;margin-top:4px;align-items:center}
 .icon-btn{
-  width:38px;height:38px;border-radius:50%;
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
   display:flex;align-items:center;justify-content:center;
-  cursor:pointer;color:var(--muted);font-size:15px;
+  cursor:pointer;color:var(--muted);font-size:14px;
   transition:background .2s,color .2s,transform .15s;
 }
-.icon-btn:hover{background:rgba(124,111,255,.18);color:var(--fg);transform:scale(1.08)}
+.icon-btn:hover{background:rgba(124,111,255,.15);color:var(--fg);transform:scale(1.08)}
 .icon-btn:active{transform:scale(.95)}
+
+/* title char — larger, right side */
+#title-canvas{width:140px;height:180px;display:block;filter:drop-shadow(0 0 24px rgba(124,111,255,.25))}
+
+/* mobile: stack vertically */
+@media(max-width:600px){
+  .title-layout{grid-template-columns:1fr}
+  .title-right{display:none}
+  .title-left{justify-content:center;align-items:center;text-align:center;padding:32px 24px}
+  .logo{font-size:clamp(48px,16vw,72px)}
+  .btn-group{max-width:100%}
+}
 
 /* ── SETTINGS ── */
 #settings-screen{background:var(--bg);z-index:60;padding:20px}
@@ -270,32 +335,45 @@ html,body{
   background:radial-gradient(ellipse at center,rgba(124,111,255,.1) 0%,transparent 70%),var(--bg);
   overflow-y:auto;padding:18px;
 }
+/* double-bezel results card */
 .res-card{
-  width:100%;max-width:460px;background:rgba(255,255,255,.04);
-  border:1px solid rgba(124,111,255,.2);border-radius:22px;
-  padding:26px 22px;backdrop-filter:blur(12px);
-  display:flex;flex-direction:column;gap:18px;
+  width:100%;max-width:460px;
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.07);border-radius:24px;
+  padding:3px;backdrop-filter:blur(16px);
+  display:flex;flex-direction:column;
+}
+.res-card-inner{
+  background:rgba(4,5,10,.96);
+  border-radius:21px;padding:24px 20px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07);
+  display:flex;flex-direction:column;gap:16px;
 }
 .res-hdr{text-align:center}
-.res-mode{font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:3px}
-.res-score{font-size:50px;font-weight:900;color:var(--lime);line-height:1;font-family:var(--mono)}
-.res-sub{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:3px}
-.res-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.stat-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:13px;padding:9px 7px;text-align:center}
-.stat-lbl{font-size:7px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:3px}
-.stat-val{font-size:19px;font-weight:700;font-family:var(--mono)}
+.res-mode{font-size:9px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:4px}
+/* monumental score — make it feel earned */
+.res-score{font-size:clamp(54px,12vw,88px);font-weight:700;color:var(--lime);line-height:1;font-family:var(--mono);letter-spacing:-.03em}
+.res-sub{font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:3px}
+.res-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.stat-box{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:11px;padding:8px 6px;text-align:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+.stat-lbl{font-size:7px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:3px}
+.stat-val{font-size:18px;font-weight:700;font-family:var(--mono)}
 .rank-badge{
   display:flex;align-items:center;justify-content:center;gap:7px;
-  padding:10px;background:rgba(216,253,113,.07);border:1px solid rgba(216,253,113,.24);
-  border-radius:13px;font-size:13px;font-weight:700;color:var(--lime);font-family:var(--mono);
+  padding:9px;background:rgba(216,253,113,.05);border:1px solid rgba(216,253,113,.2);
+  border-radius:11px;font-size:12px;font-weight:600;color:var(--lime);font-family:var(--mono);
 }
-.lb-hdr{font-size:8px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:7px}
-.lb-list{display:flex;flex-direction:column;gap:3px}
+.lb-hdr{font-size:8px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:6px}
+.lb-list{display:flex;flex-direction:column;gap:2px}
 .lb-row{
-  display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:9px;
-  background:rgba(255,255,255,.03);font-size:11px;font-family:var(--mono);
+  display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:8px;
+  background:rgba(255,255,255,.025);font-size:11px;font-family:var(--mono);
 }
-.lb-row.me{background:rgba(124,111,255,.12);border:1px solid rgba(124,111,255,.28)}
+.lb-row.me{background:rgba(124,111,255,.1);border:1px solid rgba(124,111,255,.25)}
 .lb-rank{width:22px;color:var(--muted);font-size:9px}
 .lb-name{flex:1;font-weight:600}
 .lb-score{color:var(--lime)}
@@ -315,21 +393,21 @@ html,body{
 <!-- HUD -->
 <div id="hud" class="hidden">
   <div id="hud-top">
-    <div class="hud-block">
+    <div class="hud-block"><div class="hud-inner">
       <div class="hud-lbl">Score</div>
       <div class="hud-val score" id="hud-score">0</div>
-    </div>
+    </div></div>
     <div id="world-pill">NEON GRID</div>
-    <div class="hud-block">
+    <div class="hud-block"><div class="hud-inner">
       <div class="hud-lbl">Combo × Flow</div>
       <div class="hud-val combo" id="hud-combo">×0</div>
-    </div>
+    </div></div>
   </div>
   <div id="judgment"></div>
   <div id="nodes-wrap"></div>
   <div id="flow-wrap">
     <div id="flow-lbl">FLOW ×<span id="flow-mult">1</span></div>
-    <div id="flow-outer"><div id="flow-inner"></div></div>
+    <div id="flow-segs"></div>
   </div>
   <svg id="timer-svg" viewBox="0 0 54 54">
     <circle cx="27" cy="27" r="21" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="4"/>
@@ -353,20 +431,26 @@ html,body{
   </div>
 </div>
 
-<!-- TITLE -->
+<!-- TITLE — editorial split -->
 <div id="title-screen" class="screen">
-  <div class="logo">RIFTSYNC</div>
-  <div class="logo-sub">beat-driven flow game</div>
-  <canvas id="title-canvas" width="96" height="124"></canvas>
-  <div id="title-pname">Loading…</div>
-  <div class="btn-group">
-    <button class="btn btn-primary" id="btn-daily">⚡ Play Daily Rift</button>
-    <button class="btn btn-secondary" id="btn-free">🌀 Free Play</button>
-    <button class="btn btn-ghost" id="btn-settings">⚙ Settings</button>
-  </div>
-  <div class="title-bottom">
-    <button class="icon-btn" id="title-mute" title="Mute/Unmute">🔊</button>
-    <button class="btn btn-lime" id="btn-signin" style="display:none;padding:8px 16px;font-size:12px">Sign in</button>
+  <div class="title-layout">
+    <div class="title-left">
+      <div class="logo-eyebrow">60 sec · 5 worlds · no game over</div>
+      <div class="logo">RIFT<span class="sync">SYNC</span></div>
+      <div id="title-pname">Connecting…</div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="btn-daily">Play Daily Rift</button>
+        <button class="btn btn-secondary" id="btn-free">Free Play</button>
+        <button class="btn btn-ghost" id="btn-settings">Settings →</button>
+      </div>
+      <div class="title-bottom">
+        <button class="icon-btn" id="title-mute" title="Mute/Unmute">🔊</button>
+        <button class="btn btn-lime" id="btn-signin" style="display:none">Sign in</button>
+      </div>
+    </div>
+    <div class="title-right">
+      <canvas id="title-canvas" width="140" height="180"></canvas>
+    </div>
   </div>
 </div>
 
@@ -399,7 +483,7 @@ html,body{
 <div id="intro-overlay" class="hidden">
   <div style="text-align:center;margin-bottom:14px">
     <div style="font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:5px">HOW TO PLAY</div>
-    <div style="font-size:17px;font-weight:700">Orbs are coming!</div>
+    <div style="font-size:17px;font-weight:700">Signals incoming.</div>
   </div>
   <div id="hint-up"   class="intro-hint">⬆  UP / W — when the orb hits the ring</div>
   <div id="hint-right" class="intro-hint">➡  RIGHT / D — for right orbs</div>
@@ -411,24 +495,26 @@ html,body{
 <!-- RESULTS -->
 <div id="results-screen" class="screen hidden">
   <div class="res-card">
-    <div class="res-hdr">
-      <div class="res-mode" id="res-mode">DAILY RIFT</div>
-      <div class="res-score" id="res-score">0</div>
-      <div class="res-sub">FINAL SCORE</div>
-    </div>
-    <div class="res-stats">
-      <div class="stat-box"><div class="stat-lbl">Best Combo</div><div class="stat-val" id="res-combo">0</div></div>
-      <div class="stat-box"><div class="stat-lbl">Ships</div><div class="stat-val" id="res-ships">0</div></div>
-      <div class="stat-box"><div class="stat-lbl">Rank</div><div class="stat-val" id="res-rank">#—</div></div>
-    </div>
-    <div class="rank-badge"><span>⚡</span><span id="res-rank-txt">Saving score…</span></div>
-    <div>
-      <div class="lb-hdr">LEADERBOARD</div>
-      <div class="lb-list" id="lb-list"><div style="font-size:10px;color:var(--muted);font-family:var(--mono)">Loading…</div></div>
-    </div>
-    <div class="res-actions">
-      <button class="btn btn-primary" id="btn-again">Play again</button>
-      <button class="btn btn-secondary" id="btn-copy">📋 Copy result</button>
+    <div class="res-card-inner">
+      <div class="res-hdr">
+        <div class="res-mode" id="res-mode">DAILY RIFT</div>
+        <div class="res-score" id="res-score">0</div>
+        <div class="res-sub">final score</div>
+      </div>
+      <div class="res-stats">
+        <div class="stat-box"><div class="stat-lbl">Best Combo</div><div class="stat-val" id="res-combo">0</div></div>
+        <div class="stat-box"><div class="stat-lbl">Ships</div><div class="stat-val" id="res-ships">0</div></div>
+        <div class="stat-box"><div class="stat-lbl">Rank</div><div class="stat-val" id="res-rank">#—</div></div>
+      </div>
+      <div class="rank-badge"><span>⚡</span><span id="res-rank-txt">Saving…</span></div>
+      <div>
+        <div class="lb-hdr">LEADERBOARD</div>
+        <div class="lb-list" id="lb-list"><div style="font-size:10px;color:var(--muted);font-family:var(--mono)">Loading…</div></div>
+      </div>
+      <div class="res-actions">
+        <button class="btn btn-primary" id="btn-again">Play again</button>
+        <button class="btn btn-secondary" id="btn-copy">Copy result</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1150,8 +1236,8 @@ function drawAcc(ctx,acc,s,pri){
 function drawTitleChar(){
   const tc=document.getElementById('title-canvas');
   const tx=tc.getContext('2d');
-  tx.clearRect(0,0,96,124);
-  tx.save();tx.translate(48,82);
+  tx.clearRect(0,0,140,180);
+  tx.save();tx.translate(70,118);
   const S=22;
   const st=player?.style||{};
   const skin=st.skinColor||'#c68642';
@@ -1211,7 +1297,9 @@ function tick(dt){
   document.getElementById('hud-score').textContent=G.score.toLocaleString();
   document.getElementById('hud-combo').textContent='×'+G.combo;
   document.getElementById('flow-mult').textContent=G.mult;
-  document.getElementById('flow-inner').style.width=(G.flow*100)+'%';
+  const segs=document.querySelectorAll('.fseg');
+  const litCount=Math.round(G.flow*8);
+  segs.forEach((s,i)=>s.classList.toggle('on',i<litCount));
 
   // shipit timer
   if(G.shipitActive&&now>G.shipitEnd){
@@ -1263,6 +1351,7 @@ function doRift(idx){
   G.diffLvl=idx+1;
   BC.bpm=G.world.bpm;
   document.getElementById('world-pill').textContent=G.world.name.toUpperCase();
+  document.documentElement.style.setProperty('--world-accent',G.world.accent);
   startAmbient(G.world,nextBeatAt);
   if(!G.reducedMotion)riftAlpha=1;
 }
@@ -1278,7 +1367,7 @@ function handleInput(dir){
   cooldown[dir]=now+CD;
 
   charSt.swingDir=dir;charSt.swingAmt=1;
-  try{if(navigator.vibrate)navigator.vibrate(12);}catch{}
+  if(navigator.vibrate)navigator.vibrate(12);
 
   const acNow=audioCtx.currentTime-latency;
   let best=null,bd=Infinity;
@@ -1329,7 +1418,7 @@ function onPerfect(orb,at){
 
   if(!G.reducedMotion){hitStopUntil=Date.now()/1000+.04;}
   charSt.hopY=1;charSt.sq=.78;charSt.str=1.32;
-  try{if(navigator.vibrate)navigator.vibrate(22);}catch{}
+  if(navigator.vibrate)navigator.vibrate(22);
 
   // agent nodes
   if(G.perfectStreak%8===0&&G.nodesLit<4){
@@ -1348,7 +1437,7 @@ function onGood(orb,at){
   updateMult();
   showJudge('good');
   playNote(G.world,G.noteMidi+(G.combo%5),at);
-  try{if(navigator.vibrate)navigator.vibrate(12);}catch{}
+  if(navigator.vibrate)navigator.vibrate(12);
 }
 
 function onMiss(){
@@ -1366,7 +1455,8 @@ function updateMult(){
 let jTimer=null;
 function showJudge(type){
   const el=document.getElementById('judgment');
-  el.className=type;el.textContent=type.toUpperCase();el.style.opacity='1';
+  const label=type==='good'?'SYNC':type.toUpperCase();
+  el.className=type;el.textContent=label;el.style.opacity='1';
   clearTimeout(jTimer);
   jTimer=setTimeout(()=>{el.style.opacity='0';},620);
 }
@@ -1415,6 +1505,10 @@ function startRound(mode){
   nextBeatSched=2;
 
   document.getElementById('world-pill').textContent=G.world.name.toUpperCase();
+  document.documentElement.style.setProperty('--world-accent',G.world.accent);
+  // build 8 flow segments
+  const fs=document.getElementById('flow-segs');
+  if(fs)fs.innerHTML='<div class="fseg"></div>'.repeat(8);
   showHUD();
 
   if(!G.introShown){
