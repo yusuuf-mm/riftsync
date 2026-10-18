@@ -1,243 +1,52 @@
-# RIFTSYNC — Game Design Document
+# RIFTSYNC: FRACTURE RUN
 
-> A calm, beat-driven flow game for start.ng
+RIFTSYNC is a static start.ng arcade runner. In a one-minute run, move between three lanes, jump low fractures, slide under broken gates, collect energy shards, and survive four connected dimensions. Three collisions end a run; each hit leaves a brief recovery window.
 
----
+## Play
 
-## Overview
+- Arrow keys or A/D: switch lanes.
+- Space or Up: jump.
+- Shift or Down: slide.
+- E, Q, or the RIFT PULSE button: spend three collected shards to clear nearby hazards.
+- On touch screens, swipe in any direction or use the four large on-screen controls.
 
-60-second rounds, no game over. You are an Operator holding a rift open while signals from different universes arrive on the beat. Every hit plays a note, so good play composes a soft melody.
+The run begins from PLAY RUN. A lane tap or left/right swipe changes lanes; up and down gestures jump and slide. The game pauses its timer while the browser tab is hidden. Sound is generated locally and can be muted.
 
-**Tech**: Single static `index.html`, inline CSS/JS, canvas, no libraries, no external scripts, no build step, no audio/image files (WebAudio + canvas art).
+## Dimensions
 
----
+Each dimension takes 15 seconds. The palette, architecture, atmosphere, and audio cue change while the controls and rules remain consistent.
 
-## Core Architecture
+| Time | Dimension | Motif |
+| --- | --- | --- |
+| 0–15 seconds | THE GRID | Stacked data towers and narrow signal lights |
+| 15–30 seconds | THE DOJO | Gate beams, lanterns, and warm stone |
+| 30–45 seconds | THE FORGE | Gantries, furnace cores, and heavy steel |
+| 45–60 seconds | THE VOID | Broken monoliths and a sparse star field |
 
-### Beat Clock
-- Driven by `AudioContext.currentTime` — never frame counts
-- Orbs spawned ahead of time to arrive exactly on beat
-- Hits judged against audio clock
-- On tab hide: suspend AudioContext; on show: resume and resync
+PLAN, CODE, TEST, and SHIP mark progress in the HUD without interrupting play.
 
-### Game Loop
-- `requestAnimationFrame` with delta time
-- `devicePixelRatio` capped at 2
-- Handle resize via ResizeObserver
-- Pause on `document.visibilitychange` = hidden
+## Project files
 
----
+- `index.html` is the single-page entry point.
+- `styles.css` contains the responsive interface and touch controls.
+- `src/main.js` owns the Three.js scene, rendering, input, audio, and start.ng bridge.
+- `src/runner-core.js` contains testable run rules and scoring.
+- `src/character.js` builds the runner as a procedural rigged humanoid, styled from the start.ng appearance colors.
+- `src/world.js` builds the four dimensions, sky, street, and skyline once and caches them.
+- `src/portal.js` renders each rift as a live preview of its destination.
+- `src/audio.js` synthesises all sound locally with WebAudio.
+- `tests/` covers the run rules with `node --test`.
+- `vendor/` holds the local Three.js runtime; the game makes no runtime CDN requests.
+- `assets/runner.glb` is the earlier skinned model, kept with its attribution in `assets/CESIUM-MAN-LICENSE.md` and `assets/THIRD-PARTY-NOTICES.md`. The runner is no longer loaded from it.
+- `cover.png` remains the start.ng game cover.
+- `startng.json` keeps the current shared leaderboard keys.
 
-## Input
-- Arrow keys or WASD
-- Tap / swipe the matching side of the screen
-- Character swings toward hit direction
+Serve the directory as static files over HTTP during local development; ES modules do not load from `file://` URLs. There is no build step or external runtime service.
 
----
+## start.ng integration
 
-## Timing Windows
-| Window  | Points | Effect |
-|---------|--------|--------|
-| Perfect | +100   | 40ms hit-stop, hop animation, note plays |
-| Good    | +50    | Note plays |
-| Miss    | 0      | Soft miss sound, combo resets |
+The game requests the current player through the hidden `https://start.ng/connect` iframe. It accepts replies only from the expected start.ng origin and iframe window, and matches each response to its request ID. Signed-in players see their start.ng face and name, and their appearance colors tint the runner. Guests use the default runner and can play without an account. Scores are saved for signed-in players; the shared leaderboard remains readable for guests.
 
-- Small PERFECT/GOOD label near ring on hit
-- `navigator.vibrate` on mobile hits (guarded)
+The leaderboard keeps the keys `score`, `best_combo`, and `ships`; `ships` now records dimensions stabilized. Its label is “Dimensions stabilized”.
 
----
-
-## Flow Meter
-- Fills on hits, drains on misses
-- Sets aura glow size + score multiplier x1–x8
-- Aura color = player's `primaryColor`
-
----
-
-## Round Structure
-- Exactly **60 seconds**, no game over
-- Intro: 10-second guided intro (first time only, skippable, localStorage flag)
-- Difficulty ramps each Rift Shift (15s)
-
----
-
-## Agent Nodes — "SHIP IT"
-Four nodes orbit the character: **Plan**, **Code**, **Test**, **Review**
-
-- Every streak of **8 Perfects** lights the next node
-- All 4 lit = **SHIP IT**: 5s x2 score, auto-sync assist, light burst, reset
-- One-time tooltip: "Plan, Code, Test, Review. Ship it."
-
----
-
-## Worlds (Rift Shift every 15s)
-
-| # | Name | BPM | Palette | Orb Shape | Twist |
-|---|------|-----|---------|-----------|-------|
-| 1 | Neon Grid | 80 | Green on black | Square, flickering | Hit by timing not sight |
-| 2 | Ember Dojo | 70 | Ink-wash dark, orange embers | Round ember | Some need double tap |
-| 3 | Forge Prime | 90 | Amber + steel | Hexagon | Slow heavy orbs worth more |
-| 4 | Void Fleet | 100 | Deep blue stars | Round, curved path | Orbs curve in |
-| 5 | Lantern Sea | 75 | Night ocean | Lantern shape | Orbs sway gently |
-
-### Daily Rift
-- World order seeded from UTC date (`Math.seededRandom(utcDateInt)`)
-- Same run for all players on same day
-
-### Free Play
-- Random world order each run
-
----
-
-## Music System
-
-### Ambient Bed
-- Soft pad: continuous tone cluster per world scale (WebAudio oscillators + reverb)
-- Gentle bass on the beat (sine wave, short envelope)
-
-### Hit Notes
-- Each world has a scale (e.g. pentatonic, Dorian)
-- Hit notes quantised to scale so always pleasant
-- Played via OscillatorNode + envelope
-
-### World Scales
-| World | Scale |
-|-------|-------|
-| Neon Grid | D Minor Pentatonic |
-| Ember Dojo | E Phrygian |
-| Forge Prime | F Lydian |
-| Void Fleet | G Dorian |
-| Lantern Sea | A Major Pentatonic |
-
-### Mute Button
-- Stores preference in localStorage
-- Remembers across sessions
-
----
-
-## Juice & Effects
-- **40ms hit-stop** on Perfects (pause canvas draw briefly)
-- **Beat-synced screen pulse** (subtle outer glow)
-- **Particle bursts** on hit (scale by flow meter)
-- **Squash-and-stretch** on character on Perfect
-- **Arms up** on SHIP IT
-- **Flash** on Rift Shift wipe (short wipe transition)
-- `navigator.vibrate` on mobile
-
----
-
-## Accessibility
-- **Reduced-motion toggle**: disables hit-stop, pulse, flashes, heavy particles
-- Orbs differ by shape AND direction (not colour-only)
-- Large tap targets (min 44px)
-- Portrait + landscape support
-
----
-
-## Title Screen
-- RIFTSYNC logo
-- Player character + name
-- Buttons: Play Daily Rift, Free Play, Settings, Mute
-
-### Settings
-- Mute toggle
-- Reduced-motion toggle
-- Audio latency calibration (tap-along sets offset, default 0)
-
----
-
-## Results Card
-- Score, best combo, ships (SHIP IT count)
-- Rank badge
-- Top-10 leaderboard (player row highlighted)
-- Play again button
-- "Copy result" → copies `"RIFTSYNC Daily: 12,400 | Combo 38 | 2 ships"`
-
----
-
-## start.ng Integration
-
-### Connect Page
-```js
-const START_NG = 'https://start.ng';
-// askStartNg helper from docs
-// Always check e.origin === START_NG
-```
-
-### whoami Flow
-- Call on load, on `visibilitychange`, on `focus`
-- `reply?.user ?? reply?.guest` → player object
-
-### Character Drawing
-Draw from `style`: body, primaryColor, secondaryColor, skinColor, hairColor, hair, hat, accessory
-
-Poses:
-- **Idle**: gentle bob animation
-- **Perfect hit**: hop
-- **Hit swing**: lean toward direction
-- **SHIP IT**: arms up, celebration
-
-### Guest Mode
-- Use guest look
-- Show Sign In button (doesn't block gameplay)
-- Fully playable without a player
-
-### Score Saving
-```js
-await askStartNg({ type: 'startng:score', stats: { score, best_combo, ships } }, 'startng:scoreSaved')
-```
-- Only if signed in
-- Each a whole number 0–1,000,000,000
-
-### startng.json
-```json
-{
-  "leaderboard": {
-    "stats": [
-      { "key": "score", "label": "Score", "order": "highest" },
-      { "key": "best_combo", "label": "Best combo", "order": "highest" },
-      { "key": "ships", "label": "Ships", "order": "highest" }
-    ]
-  }
-}
-```
-
-### Leaderboard
-- Read after round: `startng:leaderboard` limit 10
-- Show in results card, highlight player row by `player_id`
-- Handle `{ok:false}` gracefully
-
----
-
-## File Structure
-```
-riftsync/
-├── index.html      ← entire game (inline CSS + JS)
-├── startng.json    ← leaderboard config
-├── cover.png       ← 1600×1000, 16:10
-├── GAME.md         ← this file
-└── .gitignore
-```
-
----
-
-## Build Phases
-
-- [x] **Phase 1**: Beat clock, ring, one world, 4-direction input, hits, notes, Perfect/Good/Miss
-- [ ] **Phase 2**: Flow meter, 60s round, results card, difficulty ramp, ambient bed
-- [ ] **Phase 3**: All 5 worlds, Rift Shift, Daily Rift + Free Play
-- [ ] **Phase 4**: Agent nodes + SHIP IT, title screen, intro, calibration, settings, accessibility
-- [ ] **Phase 5**: start.ng integration: character, profile card, guest, startng.json, score, leaderboard
-- [ ] **Phase 6**: Juice + performance pass, narrow phone viewport
-- [ ] **Phase 7**: cover.png, push to GitHub, check + publish
-
----
-
-## GitHub Repo
-- Name: `riftsync`
-- URL: `https://github.com/[owner]/riftsync`
-- Game URL: `https://riftsync.start.ng`
-
----
-
-*Last updated: Phase 1 in progress*
+See the [official start.ng documentation](https://start.ng/docs.md) for hosting and publishing.

@@ -3,7 +3,7 @@
     "stats": [
       { "key": "score", "label": "Score", "order": "highest" },
       { "key": "best_combo", "label": "Best combo", "order": "highest" },
-      { "key": "ships", "label": "Ships", "order": "highest" }
+      { "key": "ships", "label": "Dimensions stabilized", "order": "highest" }
     ]
   }
 }
